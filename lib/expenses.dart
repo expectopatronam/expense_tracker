@@ -5,8 +5,9 @@ import 'package:expense_tracker/new_expense.dart';
 import 'package:expense_tracker/chart/chart.dart';
 
 class Expenses extends StatefulWidget {
-  const Expenses({super.key,});
- 
+  const Expenses({
+    super.key,
+  });
 
   @override
   State<Expenses> createState() {
@@ -30,14 +31,16 @@ class _ExpensesState extends State<Expenses> {
   ];
   void _openAddExpenseOverlay() {
     showModalBottomSheet(
-      isScrollControlled: true,
-        context: context, builder: (ctx) => NewExpense(onAddExpense: _addExpense));
+        useSafeArea: true,
+        isScrollControlled: true,
+        context: context,
+        builder: (ctx) => NewExpense(onAddExpense: _addExpense));
   }
 
   void _addExpense(Expense expense) {
-        setState(() {
-          _registeredExpenses.add(expense);
-        });
+    setState(() {
+      _registeredExpenses.add(expense);
+    });
   }
 
   void _removeExpense(Expense expense) {
@@ -46,29 +49,32 @@ class _ExpensesState extends State<Expenses> {
       _registeredExpenses.remove(expense);
     });
     ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration:const Duration(seconds: 3),
-        content:const Text('Expense Deleted'),
-         action:SnackBarAction(label: 'undo', 
-                               onPressed: (){
-                                setState(() {
-                                  _registeredExpenses.insert(expenseIndex, expense);
-                                });
-                               } , )));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 3),
+        content: const Text('Expense Deleted'),
+        action: SnackBarAction(
+          label: 'undo',
+          onPressed: () {
+            setState(() {
+              _registeredExpenses.insert(expenseIndex, expense);
+            });
+          },
+        )));
   }
-
+ 
   @override
-  Widget build(context) {
-    Widget mainContent = const Center(child: Text('No expenses addded'));
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    Widget mainContent = const Center(child: Text('No expenses addded'),);
+
+    if (_registeredExpenses.isNotEmpty) {
+      mainContent = ExpensesList(
+        expenses: _registeredExpenses,
+        onRemoveExpense: _removeExpense,
+      );
+    }
    
-   if(_registeredExpenses.isNotEmpty){
-     
-      mainContent =  ExpensesList(expenses: _registeredExpenses, onRemoveExpense: _removeExpense,);
-    
-   }
-   
-    return Scaffold(
+   return Scaffold(
         appBar: AppBar(
           title: const Text('Flutter ExpenseTracker'),
           actions: [
@@ -78,13 +84,22 @@ class _ExpensesState extends State<Expenses> {
             )
           ],
         ),
-        body: Column(
+        body: width < 600 ? Column(
           children: [
             Chart(expenses: _registeredExpenses),
             Expanded(
-              child:mainContent,
+              child: mainContent,
             ),
           ],
-        ));
+        ) 
+        : Row(
+          children: [
+             Expanded(child: Chart(expenses: _registeredExpenses)),
+            Expanded(
+              child: mainContent,
+            ),
+          ],
+        ) 
+         );
   }
 }
